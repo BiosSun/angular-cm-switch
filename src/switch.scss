@@ -1,0 +1,55 @@
+@charset "utf-8";
+
+$bs-switch-prefix: ui-switch;
+
+.#{$bs-switch-prefix},
+.#{$bs-switch-prefix}-content,
+.#{$bs-switch-prefix}-panel {
+    display: block;
+    position: relative;
+}
+
+
+.#{$bs-switch-prefix} {
+    width: 100%;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.#{$bs-switch-prefix}-content {
+    z-index: 2;
+}
+
+.#{$bs-switch-prefix}-panel {
+    z-index: 3;
+
+    img {
+        display: block;
+    }
+}
+
+.#{$bs-switch-prefix}-nav {
+    display: block;
+
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 4;
+
+    line-height: 20px;
+    font-size: 12px;
+
+    text-align: center;
+}
+
+.#{$bs-switch-prefix}-nav-item {
+    display: inline-block;
+    margin: 0 2px;
+    color: #fff;
+    opacity: .4;
+
+    .active {
+        opacity: .8;
+    }
+}
