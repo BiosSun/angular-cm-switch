@@ -1,0 +1,660 @@
+(function() {
+
+    angular.module('bsSwitch', [])
+        .controller('bsSwitchCtrl', bsSwitchCtrl)
+        .controller('bsSwitchContentCtrl', bsSwitchContentCtrl)
+        .controller('bsSwitchPanelCtrl', bsSwitchPanelCtrl)
+        .controller('bsSwitchNavCtrl', bsSwitchNavCtrl)
+        .directive('bsSwitch', bsSwitch)
+        .directive('bsSwitchContent', bsSwitchContent)
+        .directive('bsSwitchPanel', bsSwitchPanel)
+        .directive('bsSwitchNav', bsSwitchNav);
+
+    bsSwitchCtrl.$inject = '$scope, $element, $attrs'.split(', ');
+    function bsSwitchCtrl($scope, $el, $attrs) {
+        var el = $el[0],
+            switchCtrl = this;
+
+        angular.extend(switchCtrl, {
+            $scope: $scope,
+
+            config: $scope,
+
+            width: undefined,
+
+            init: function() {
+                $scope.$broadcast('switch.init.start');
+
+                $el.addClass($scope.classPrefix);
+                this.width = el.clientWidth;
+
+                this.bindTouchEvent();
+
+                $scope.$broadcast('switch.init');
+                $scope.$broadcast('switch.init.end');
+            },
+
+            setSwitchContent: function(switchContent) {
+                this.switchContent = switchContent;
+            },
+
+            // 绑定触摸事件
+            bindTouchEvent: function() {
+                var oX, oY, count;
+
+                el.addEventListener('touchstart', function(e) {
+                    oX = e.touches[0].pageX;
+                    oY = e.touches[0].pageY;
+
+                    count = 0;
+
+                    // 判断是否为横向移动
+                    el.addEventListener('touchmove', hslip);
+                });
+
+
+                // 水平滑动操作
+                function hslip(e) {
+                    var x = e.touches[0].pageX,
+                        y = e.touches[0].pageY,
+
+                        w = Math.abs(x - oX),
+                        h = Math.abs(y - oY),
+
+                        r = Math.atan(w / h) * 180 / Math.PI;
+
+                    count++;
+
+                    // 当移动角度大于 20 度时视为横向移动
+                    // 当连续三次触发 touch move 事件时都为横向移动时，绑定横向滑动事件
+                    if (r > 20) {
+                        if (count === 3) {
+                            switchCtrl.oX = x;
+
+                            el.addEventListener('touchmove', switchCtrl.slipHandler);
+                            el.addEventListener('touchend', switchCtrl.slipEndHandler);
+                            el.addEventListener('touchcancel', switchCtrl.slipEndHandler);
+
+                            el.removeEventListener('touchmove', hslip);
+                        }
+
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    // 否则过滤掉该事件
+                    else {
+                        el.removeEventListener('touchmove', hslip);
+                    }
+                }
+            },
+
+            slipHandler: function (e) {
+                var x = e.touches[0].pageX,
+                    h = x - switchCtrl.oX;
+                switchCtrl.oX = x;
+                switchCtrl.switchContent.move(h);
+            },
+
+            slipEndHandler: function (e) {
+                el.removeEventListener('touchmove', switchCtrl.slipHandler);
+                el.removeEventListener('touchend', switchCtrl.slipEndHandler);
+                el.removeEventListener('touchcancel', switchCtrl.slipEndHandler);
+                switchCtrl.switchContent.standstill();
+            }
+        });
+    }
+
+    bsSwitchContentCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
+    function bsSwitchContentCtrl($scope, $el, $attrs, $q) {
+        var el = $el[0],
+            switchContentCtrl = this;
+
+        angular.extend(switchContentCtrl, {
+            // 对应的 switch
+            switch: undefined,
+
+            // 存放所有的面板
+            panels: [],
+
+            // 当前焦点面板
+            currentPanel: undefined,
+
+            // 当前焦点面板的索引
+            currentPanelIndex: undefined,
+
+            // 内容区域宽度
+            width: 0,
+
+            // 内容区域偏移
+            offset: 0,
+
+            // 最近一次移动时的移动方向 （1: 向右，-1: 向左）
+            moveDirection: 1,
+
+            // 动画计时器
+            animateTimer: undefined,
+
+            init: function(switchCtrl) {
+                this.switch = switchCtrl;
+                $el.addClass(switchCtrl.config.classPrefix + '-content');
+                $el.css('width', self.width);
+            },
+
+            addPanel: function(panel) {
+                this.panels.push(panel);
+                this.width += panel.outerWidth;
+                el.style.width = this.width + 'px';
+
+                this.switch.$scope.$broadcast('bsSwitch.panel.add', this.panels.length - 1);
+
+                if (!this.currentPanel) {
+                    this.currentPanel = panel;
+                    this.currentPanelIndex = this.panels.length - 1;
+
+                    this.switch.$scope.$broadcast('bsSwitch.panel.switch', this.currentPanelIndex);
+                }
+            },
+
+            /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
+            move: function(length) {
+                this.animate && this.animate.over();
+                this._move(this.offset + length);
+            },
+
+            standstill: function() {
+                var self = this,
+
+                    i = 0, l = this.panels.length,
+                    li = l - 1,
+
+                    moveLength = Math.abs(this.offset),
+
+                    panel;
+
+                for (; i < l; i++) {
+                    panel = this.panels[i];
+
+                    if (moveLength < panel.outerWidth) {
+                        break;
+                    }
+                    else {
+                        moveLength -= panel.outerWidth;
+                    }
+                }
+
+                if (i === l) {
+                    i = li;
+                }
+
+                // 向左移动
+                if (this.moveDirection === -1) {
+                    i = Math.min(i + 1, li);
+                }
+
+                this.toggle(i);
+            },
+
+            /**
+             * 切换到指定的面板
+             */
+            toggle: function(index) {
+                var self = this,
+
+                    deferred = $q.defer(),
+                    promise = deferred.promise,
+
+                    panel = this.panels[index];
+
+                // 如果待切换的面板不存在，则不进行切换。
+                if (!panel) {
+                    deferred.resolve();
+                    return promise;
+                }
+
+                var startOffset = this.offset,
+                    endOffset = -panel.el.offsetLeft;
+
+                if (startOffset === endOffset) {
+                    deferred.resolve();
+                    return promise;
+                }
+
+                this.currentPanel = panel;
+                this.currentPanelIndex = index;
+
+                this.switch.$scope.$broadcast('bsSwitch.panel.switch', index);
+
+                if (this.animate) {
+                    this.animate.over();
+                }
+
+                this.animate = new Animate({
+                    target: el,
+                    speed: 100,
+                    frame: function(target, p, e) {
+                        self._move(startOffset - (startOffset - endOffset) * e);
+                    },
+                    over: function() {
+                        deferred.resolve();
+                    }
+                });
+
+                this.animate.run();
+
+                return promise;
+            },
+
+            _move: function(offset) {
+                offset = Math.max(Math.min(0, offset),  this.switch.width - this.width);
+
+                if (offset !== this.offset) {
+                    this.moveDirection = offset >= this.offset ? 1 : -1;
+                    this.offset = offset;
+
+                    var cssValue = 'translate3D(' + this.offset + 'px, 0, 0)';
+                    el.style.webkitTransform = cssValue;
+                    el.style.msTransform = cssValue;
+                    el.style.transform = cssValue;
+
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        });
+    }
+
+    bsSwitchPanelCtrl.$inject = '$scope, $element, $attrs'.split(', ');
+    function bsSwitchPanelCtrl($scope, $el, $attrs) {
+        var el = $el[0],
+            switchPanelCtrl = this;
+
+        angular.extend(switchPanelCtrl, {
+            // 对应的 switch
+            switch: undefined,
+
+            // 对应的 DOM 元素
+            el: el,
+
+            init: function(switchCtrl) {
+                $el.addClass(switchCtrl.config.classPrefix + '-panel');
+
+                var elStyles = window.getComputedStyle(el),
+
+                    marginRight = parseInt(elStyles.marginRight, 10),
+                    marginLeft = parseInt(elStyles.marginLeft, 10),
+                    offsetWidth = el.offsetWidth,
+
+                    outerWidth = marginRight + marginLeft + offsetWidth;
+
+                this.outerWidth = outerWidth;
+            }
+        });
+    }
+
+    bsSwitchNavCtrl.$inject = '$scope, $element, $attrs'.split(', ');
+    function bsSwitchNavCtrl($scope, $el, $attrs) {
+        var el = $el[0],
+            switchNavCtrl = this;
+
+        angular.extend(switchNavCtrl, {
+            // 存放所有导航节点
+            nodes: [],
+
+            activeNode: undefined,
+            activeNodeIndex: undefined,
+
+            init: function(switchCtrl) {
+                var self = this;
+
+                this.switch = switchCtrl;
+                $el.addClass(switchCtrl.config.classPrefix + '-nav');
+
+                switchCtrl.$scope.$on('bsSwitch.panel.add', function($event, index) {
+                    self.addNode(index);
+                });
+
+                switchCtrl.$scope.$on('bsSwitch.panel.switch', function($event, index) {
+                    self.change(index);
+                });
+            },
+
+            change: function(index) {
+                if (this.activeNode) {
+                    this.activeNode.removeClass('active');
+                }
+
+                if (index < 0 || index >= this.nodes.length) {
+                    index = undefined;
+                }
+
+                this.activeNodeIndex = index;
+                this.activeNode = this.nodes[index];
+
+                this.activeNode.addClass('active');
+            },
+
+            addNode: function(index) {
+                var node = angular.element('<span>●</span>');
+
+                node.addClass(this.switch.config.classPrefix + '-nav-item');
+                this.nodes.push(node);
+
+                if (index === 0) {
+                    this.nodes.unshift(node);
+                    $el.append(node);
+                }
+                else {
+                    this.nodes.splice(index, 0, node);
+                    this.nodes[index - 1].after(node);
+                }
+            }
+        });
+    }
+
+
+    function bsSwitch() {
+        return {
+            restrict: 'E',
+            controller: 'bsSwitchCtrl',
+            scope: {
+                step: '=?',
+                classPrefix: '@?',
+                autoPlay: '=?'
+            },
+            link: link
+        };
+
+        function link($scope, $el, $attrs, switchCtrl) {
+            if ($attrs.$attr.autoPlay && $scope.autoPlay === undefined) {
+                $scope.autoPlay = true;
+            }
+
+            if (!$scope.step) {
+                $scope.step = 1;
+            }
+
+            if (!$scope.classPrefix) {
+                $scope.classPrefix = 'ui-switch';
+            }
+
+            console.info($scope);
+
+            switchCtrl.init();
+        }
+    }
+
+    function bsSwitchContent() {
+        return {
+            restrict: 'E',
+            controller: 'bsSwitchContentCtrl',
+            require: ['^^bsSwitch', 'bsSwitchContent'],
+            link: link
+        };
+
+        function link($scope, $el, $attrs, ctrls) {
+            var switchCtrl = ctrls[0],
+                switchContentCtrl = ctrls[1];
+
+            switchCtrl.$scope.$on('switch.init', function() {
+                switchContentCtrl.init(switchCtrl);
+                switchCtrl.setSwitchContent(switchContentCtrl);
+            });
+        }
+    }
+
+    function bsSwitchPanel() {
+        return {
+            restrict: 'E',
+            controller: 'bsSwitchPanelCtrl',
+            require: ['^^bsSwitch', '^^bsSwitchContent', 'bsSwitchPanel'],
+            link: link
+        };
+
+        function link($scope, $el, $attrs, ctrls) {
+            var switchCtrl = ctrls[0],
+                switchContentCtrl = ctrls[1],
+                switchPanelCtrl = ctrls[2];
+
+            switchCtrl.$scope.$on('switch.init', function() {
+                switchPanelCtrl.init(switchCtrl);;
+            });
+
+            switchCtrl.$scope.$on('switch.init.end', function() {
+                switchContentCtrl.addPanel(switchPanelCtrl);
+            });
+        }
+    }
+
+    function bsSwitchNav() {
+        return {
+            restrict: 'E',
+            controller: 'bsSwitchNavCtrl',
+            require: ['^^bsSwitch', 'bsSwitchNav'],
+            link: link
+        };
+
+        function link($scope, $el, $attrs, ctrls) {
+            var switchCtrl = ctrls[0],
+                switchNavCtrl = ctrls[1];
+
+            switchCtrl.$scope.$on('switch.init', function() {
+                switchNavCtrl.init(switchCtrl);
+            });
+        }
+    }
+
+
+    // ---------------------------
+    // tool functions
+    // ---------------------------
+
+    var Animate = (function AnimateInit() {
+
+        'use strict';
+
+        var
+
+        // 每秒帧数
+        FPS = 77,
+
+        // 动画速度关键字
+        SPEED = {
+            slow : 600,
+            fast : 200,
+            normal : 400
+        },
+
+        // 帧间时长，由FPS计算而来。
+        FS = Math.floor(1000 / FPS),
+
+        _hasown = Object.prototype.hasOwnProperty;
+
+        /**
+         * 动画处理函数
+         *
+         * @params:
+         *   options : {Object} :
+         *     配置对象
+         *
+         * @options:
+         *   target : {*} :
+         *     应用动画的对象
+         *
+         *   speed : {Number, ["slow", "normal", "fast"]} :
+         *     动画时长；数值类型，以毫秒为单位；另外也可以使用预定的速度关键字字符串。
+         *
+         *   easing : {String} : 'linear'
+         *
+         *   iteration : {Number, ["infinite"]} : 1
+         *     动画执行次数，另外也可以使用预定关键字字符串“infinite”来设定动画无限循环。
+         *
+         *   into : {Function} :
+         *     初始化函数；将在动画开始前（第一帧计时开始时）执行。
+         *
+         *   frame : {Function} :
+         *     帧计算函数；将在动画每一帧计时结束后执行。
+         *
+         *   over : {Function} :
+         *     清理函数；将在动画结束后（最后一帧完成时）执行；
+         *
+         *   suspend : {Function} :
+         *     暂停处理函数；将在动画暂停时执行；
+         */
+        function Animate( options ) {
+            var t = this;
+
+            t.target = options.target;    // 动画应用目标对象
+            t.isRun = false;              // 动画是否正在运行
+            t.isSuspend = false;          // 动画是否暂停
+            t.iterationCount = 0;         // 动画当前播放次数
+
+            t._timeout = null;            // 动画计时器
+            t._playTime = 0;              // 动画播放时长
+
+            options.easing = options.easing || Animate.easing.def;
+            options.speed = _hasown.call(SPEED, options.speed) ? SPEED[options.speed] : options.speed;
+            options.iteration = options.iteration !== 'infinite' && options.iteration < 1 ? 1 : options.iteration;
+
+            t.options = options;
+        }
+
+        Animate.prototype = {
+            constructor : Animate,
+
+            /**
+             * 执行动画
+             */
+            run : function() {
+                var t = this, lastFrameTime;
+
+                if ( t.isRun ) {
+                    return false;
+                }
+
+                if ( !t.isSuspend ) {
+                    this._callFun( 'init', [t.target, t] );
+                }
+                else {
+                    t.isSuspend = false;
+                }
+
+                t.isRun = true;
+                lastFrameTime = new Date();
+                t._timeout = setTimeout(step, FS);
+
+                return true;
+
+                function step() {
+                    var now = new Date(), progress;
+
+                    t._playTime += now - lastFrameTime;          // 播放时长
+                    progress = t._playTime / t.options.speed;    // 进度百分比
+
+                    progress = Math.min(progress, 1);  // 防止百分比数值溢出
+
+                    t._frame(progress);  // 执行帧
+
+                    // 继续执行动画
+                    if ( progress < 1 ) {
+                        lastFrameTime = now;
+                        t._timeout = setTimeout( step, FS );
+                    }
+                    // 完成动画
+                    else {
+                        t.over();
+                        t.iterationCount++;
+
+                        // 重复播放
+                        if ( t.options.iteration === 'infinite' || t.options.iteration > t.iterationCount ) {
+                            t.run();
+                        }
+                        else {
+                            t.iterationCount = 0;
+                        }
+                    }
+                }
+            },
+
+            /**
+             * 暂停动画
+             */
+            suspend : function() {
+                var t = this;
+
+                clearTimeout(t._timeout);
+                t.isSuspend = true;
+
+                t._callFun( 'suspend', [t.target, t] );
+            },
+
+            /**
+             * 结束动画
+             *
+             * @params:
+             *   toEnd : {Boolean} : false
+             *     是否将动画立即完成。
+             *
+             *     p.s.
+             *     无论动画是否立即完成，结束回调函数都会被调用。
+             */
+            over : function( toEnd ) {
+                var t = this;
+
+                if ( toEnd ) {
+                    t._frame( 1 );
+                }
+
+                clearTimeout(t._timeout);
+
+                t.isRun = false;
+                t.isSuspend = false;
+                t._playTime = 0;
+
+                t._callFun( 'over', [t.target, t] );
+            },
+
+            /**
+             * 执行动画帧
+             */
+            _frame : function( progress ) {
+                var t = this;
+                t._callFun( 'frame', [t.target, progress, Animate.easing[t.options.easing]( progress, 0, 1, 1 ), t] );
+            },
+
+            /**
+             * 执行回调函数
+             */
+            _callFun : function( name, params ) {
+                var fun = this.options[name],
+                    r = true;
+
+                if ( typeof fun === 'function' ) {
+                    fun.apply( this, params );
+                }
+                else if ( typeof fun === 'object' && typeof fun.length === 'number' ) {  // array
+                    for ( var i = 0, l = fun.lenght; i < l; i++ ) {
+                        fun[i].apply( this, params );
+                    }
+                }
+                else {
+                    r = false;
+                }
+
+                return r;
+            }
+        };
+
+        Animate.easing = {
+            def : 'linear',
+
+            linear : function( t, b, c, d ) {
+                return t;
+            }
+        };
+
+        return Animate;
+    })(window);
+
+})();
