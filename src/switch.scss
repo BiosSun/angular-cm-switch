@@ -53,7 +53,7 @@ $bs-switch-prefix: ui-switch;
     color: #fff;
     opacity: .4;
 
-    .active {
+    &.active {
         opacity: .8;
     }
 }
