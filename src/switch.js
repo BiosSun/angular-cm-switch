@@ -1,14 +1,22 @@
 (function() {
 
     angular.module('bsSwitch', [])
+
         .controller('bsSwitchCtrl', bsSwitchCtrl)
-        .controller('bsSwitchContentCtrl', bsSwitchContentCtrl)
+        .controller('bsSwitchContentGalleryCtrl', bsSwitchContentGalleryCtrl)
+        .controller('bsSwitchContentSliderCtrl', bsSwitchContentSliderCtrl)
         .controller('bsSwitchPanelCtrl', bsSwitchPanelCtrl)
         .controller('bsSwitchNavCtrl', bsSwitchNavCtrl)
+
         .directive('bsSwitch', bsSwitch)
         .directive('bsSwitchContent', bsSwitchContent)
         .directive('bsSwitchPanel', bsSwitchPanel)
         .directive('bsSwitchNav', bsSwitchNav);
+
+    var DIRECTIONS = {
+        LEFT: -1,
+        RIGHT: 1
+    };
 
     bsSwitchCtrl.$inject = '$scope, $element, $attrs'.split(', ');
     function bsSwitchCtrl($scope, $el, $attrs) {
@@ -20,12 +28,16 @@
 
             config: $scope,
 
+            // 对应的内容控制器
+            content: undefined,
+
             width: undefined,
 
             init: function() {
                 $scope.$broadcast('switch.init.start');
 
                 $el.addClass($scope.classPrefix);
+                $el.addClass($scope.classPrefix + '-' + $scope.type);
                 this.width = el.clientWidth;
 
                 this.bindTouchEvent();
@@ -104,8 +116,205 @@
         });
     }
 
-    bsSwitchContentCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
-    function bsSwitchContentCtrl($scope, $el, $attrs, $q) {
+    bsSwitchContentSliderCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
+    function bsSwitchContentSliderCtrl($scope, $el, $attrs, $q) {
+        var el = $el[0],
+            switchContentCtrl = this;
+
+        angular.extend(switchContentCtrl, {
+            // 对应的 switch
+            switch: undefined,
+
+            // 存放所有的面板
+            panels: [],
+
+            // 当前焦点面板
+            currentPanel: undefined,
+
+            // 当前焦点面板的索引
+            currentPanelIndex: undefined,
+
+            // 内容区域宽度
+            width: 0,
+
+            // 当前面板的偏移量
+            panelOffset: 0,
+
+            // 最近一次移动时的移动方向 （1: 向右，-1: 向左）
+            moveDirection: 1,
+
+            // 动画执行器
+            animate: undefined,
+
+            // 当前面板的右面板
+            rightPanel: undefined,
+
+            // 当面面板的左面板
+            leftPanel: undefined,
+
+            init: function(switchCtrl) {
+                this.switch = switchCtrl;
+                $el.addClass(switchCtrl.config.classPrefix + '-content');
+                this.width = el.clientWidth;
+            },
+
+            addPanel: function(panel) {
+                this.panels.push(panel);
+
+                var index = this.panels.length - 1;
+                this.switch.$scope.$broadcast('bsSwitch.panel.add', index);
+
+                if (!this.currentPanel) {
+                    this.currentPanel = panel;
+                    this.currentPanelIndex = index;
+
+                    this.currentPanel.$el.addClass('active');
+
+                    this.switch.$scope.$broadcast('bsSwitch.panel.switch', this.currentPanelIndex);
+                }
+                else {
+                    panel.$el.addClass('hide');
+                }
+            },
+
+            /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
+            move: function(length) {
+                this.animate && this.animate.over();
+                this._move(this.panelOffset + length);
+            },
+
+            standstill: function() {
+                var index = this.currentPanelIndex;
+
+                if (this.moveDirection === DIRECTIONS.LEFT) {
+                    index += 1;
+                    index %= this.panels.length;
+                }
+                else {
+                    index -= 1;
+
+                    if (index === -1) {
+                        index = this.panels.length - 1;
+                    }
+                }
+
+                this.toggle(index, this.moveDirection);
+            },
+
+            /** 切换面板 */
+            toggle: function(index, direction) {
+                var self = this,
+
+                    deferred = $q.defer(),
+                    promise = deferred.promise,
+
+                    panel = this.panels[index],
+
+                    startOffset = this.panelOffset,
+                    endOffset;
+
+                if (direction === DIRECTIONS.LEFT) {
+                    this.rightPanel = panel;
+                    endOffset = -(this.currentPanel.outerWidth);
+                }
+                else if(direction === DIRECTIONS.RIGHT) {
+                    this.leftPanel = panel;
+                    endOffset = this.currentPanel.outerWidth;
+                }
+                else {
+                    deferred.resolve();
+                    return promise;
+                }
+
+                this.switch.$scope.$broadcast('bsSwitch.panel.switch', index);
+
+                if (this.animate) {
+                    this.animate.over();
+                }
+
+                this.animate = new Animate({
+                    target: this.currentPanel.el,
+                    speed: 100,
+                    frame: function(target, p, e) {
+                        self._move(startOffset - (startOffset - endOffset) * e);
+                    },
+                    over: function() {
+                        self.currentPanel.$el.removeClass('active');
+                        self.currentPanel.$el.addClass('hide');
+
+                        if (direction === DIRECTIONS.LEFT) {
+                            self.currentPanel = self.rightPanel;
+                            self.rightPanel = undefined;
+
+                            if (self.leftPanel) {
+                                self.leftPanel.$el.addClass('hide');
+                                self.leftPanel = undefined;
+                            }
+                        }
+                        else {
+                            self.currentPanel = self.leftPanel;
+                            self.leftPanel = undefined;
+
+                            if (self.rightPanel) {
+                                self.rightPanel.$el.addClass('hide');
+                                self.rightPanel = undefined;
+                            }
+                        }
+
+                        self.currentPanel.$el.addClass('active');
+                        self.currentPanelIndex = index;
+
+                        self.panelOffset = 0;
+
+                        self.animate = undefined;
+
+                        deferred.resolve();
+                    }
+                });
+
+                this.animate.run();
+
+                return promise;
+            },
+
+            _move: function(offset) {
+                this.moveDirection = offset >= this.panelOffset ? DIRECTIONS.RIGHT : DIRECTIONS.LEFT;
+                this.panelOffset = offset;
+                this._transform(this.currentPanel.el, offset);
+
+                if (!this.rightPanel) {
+                    var rightPanelIndex = (this.currentPanelIndex + 1) % this.panels.length;
+                    this.rightPanel = this.panels[rightPanelIndex];
+                    this.rightPanel.$el.removeClass('hide');
+                }
+
+                this._transform(this.rightPanel.el, this.panelOffset + this.width);
+
+                if (!this.leftPanel) {
+                    var leftPanelIndex = (this.currentPanelIndex - 1);
+
+                    if (leftPanelIndex === -1) {
+                        leftPanelIndex = this.panels.length - 1;
+                    }
+
+                    this.leftPanel = this.panels[leftPanelIndex];
+                    this.leftPanel.$el.removeClass('hide');
+                }
+
+                this._transform(this.leftPanel.el, this.panelOffset - this.width);
+            },
+
+            _transform: function(el, x) {
+                var cssValue = 'translate3D(' + x + 'px, 0, 0)';
+                el.style.webkitTransform = cssValue;
+                el.style.msTransform = cssValue;
+                el.style.transform = cssValue;
+            }
+        });
+    };
+
+    bsSwitchContentGalleryCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
+    function bsSwitchContentGalleryCtrl($scope, $el, $attrs, $q) {
         var el = $el[0],
             switchContentCtrl = this;
 
@@ -131,8 +340,8 @@
             // 最近一次移动时的移动方向 （1: 向右，-1: 向左）
             moveDirection: 1,
 
-            // 动画计时器
-            animateTimer: undefined,
+            // 动画执行器
+            animate: undefined,
 
             init: function(switchCtrl) {
                 this.switch = switchCtrl;
@@ -275,6 +484,7 @@
             switch: undefined,
 
             // 对应的 DOM 元素
+            $el: $el,
             el: el,
 
             init: function(switchCtrl) {
@@ -361,7 +571,8 @@
             scope: {
                 step: '=?',
                 classPrefix: '@?',
-                autoPlay: '=?'
+                autoPlay: '=?',
+                type: '@?'
             },
             link: link
         };
@@ -369,6 +580,10 @@
         function link($scope, $el, $attrs, switchCtrl) {
             if ($attrs.$attr.autoPlay && $scope.autoPlay === undefined) {
                 $scope.autoPlay = true;
+            }
+
+            if (!$scope.type) {
+                $scope.type = 'slider';
             }
 
             if (!$scope.step) {
@@ -385,17 +600,25 @@
         }
     }
 
-    function bsSwitchContent() {
+    bsSwitchContent.$inject = '$controller'.split(', ');
+    function bsSwitchContent($controller) {
         return {
             restrict: 'E',
-            controller: 'bsSwitchContentCtrl',
-            require: ['^^bsSwitch', 'bsSwitchContent'],
+            require: ['^^bsSwitch'],
             link: link
         };
 
         function link($scope, $el, $attrs, ctrls) {
             var switchCtrl = ctrls[0],
-                switchContentCtrl = ctrls[1];
+                contentCtrlName = 'bsSwitchContent' + capitalize(switchCtrl.config.type) + 'Ctrl';
+
+            var switchContentCtrl = $controller(contentCtrlName, {
+                $scope: $scope,
+                $element: $el,
+                $attrs: $attrs
+            });
+
+            switchCtrl.content = switchContentCtrl;
 
             switchCtrl.$scope.$on('switch.init', function() {
                 switchContentCtrl.init(switchCtrl);
@@ -408,21 +631,20 @@
         return {
             restrict: 'E',
             controller: 'bsSwitchPanelCtrl',
-            require: ['^^bsSwitch', '^^bsSwitchContent', 'bsSwitchPanel'],
+            require: ['^^bsSwitch', 'bsSwitchPanel'],
             link: link
         };
 
         function link($scope, $el, $attrs, ctrls) {
             var switchCtrl = ctrls[0],
-                switchContentCtrl = ctrls[1],
-                switchPanelCtrl = ctrls[2];
+                switchPanelCtrl = ctrls[1];
 
             switchCtrl.$scope.$on('switch.init', function() {
                 switchPanelCtrl.init(switchCtrl);;
             });
 
             switchCtrl.$scope.$on('switch.init.end', function() {
-                switchContentCtrl.addPanel(switchPanelCtrl);
+                switchCtrl.content.addPanel(switchPanelCtrl);
             });
         }
     }
@@ -449,6 +671,11 @@
     // ---------------------------
     // tool functions
     // ---------------------------
+
+    function capitalize(str) {
+        var fc = str[0];
+        return fc ? (fc.toUpperCase() + str.substring(1)) : str;
+    }
 
     var Animate = (function AnimateInit() {
 
