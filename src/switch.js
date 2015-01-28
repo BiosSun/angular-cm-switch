@@ -28,6 +28,9 @@
 
             config: $scope,
 
+            // 是否初始化完成
+            isInit: false,
+
             // 对应的内容控制器
             content: undefined,
 
@@ -43,6 +46,8 @@
                 this.bindTouchEvent();
 
                 $scope.$broadcast('switch.init');
+
+                this.isInit = true;
                 $scope.$broadcast('switch.init.end');
             },
 
@@ -620,10 +625,17 @@
 
             switchCtrl.content = switchContentCtrl;
 
-            switchCtrl.$scope.$on('switch.init', function() {
+            if (switchCtrl.isInit) {
+                init();
+            }
+            else {
+                switchCtrl.$scope.$on('switch.init', init);
+            }
+
+            function init() {
                 switchContentCtrl.init(switchCtrl);
                 switchCtrl.setSwitchContent(switchContentCtrl);
-            });
+            }
         }
     }
 
@@ -639,13 +651,19 @@
             var switchCtrl = ctrls[0],
                 switchPanelCtrl = ctrls[1];
 
-            switchCtrl.$scope.$on('switch.init', function() {
-                switchPanelCtrl.init(switchCtrl);;
-            });
-
-            switchCtrl.$scope.$on('switch.init.end', function() {
+            if (switchCtrl.isInit) {
+                switchPanelCtrl.init(switchCtrl);
                 switchCtrl.content.addPanel(switchPanelCtrl);
-            });
+            }
+            else {
+                switchCtrl.$scope.$on('switch.init', function() {
+                    switchPanelCtrl.init(switchCtrl);
+                });
+
+                switchCtrl.$scope.$on('switch.init.end', function() {
+                    switchCtrl.content.addPanel(switchPanelCtrl);
+                });
+            }
         }
     }
 
@@ -661,9 +679,14 @@
             var switchCtrl = ctrls[0],
                 switchNavCtrl = ctrls[1];
 
-            switchCtrl.$scope.$on('switch.init', function() {
+            if (switchCtrl.isInit) {
                 switchNavCtrl.init(switchCtrl);
-            });
+            }
+            else {
+                switchCtrl.$scope.$on('switch.init', function() {
+                    switchNavCtrl.init(switchCtrl);
+                });
+            }
         }
     }
 
