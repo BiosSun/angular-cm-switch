@@ -110,6 +110,9 @@
                     h = x - switchCtrl.oX;
                 switchCtrl.oX = x;
                 switchCtrl.switchContent.move(h);
+
+                e.preventDefault();
+                e.stopPropagation();
             },
 
             slipEndHandler: function (e) {
