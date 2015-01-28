@@ -74,3 +74,16 @@ $bs-switch-prefix: ui-switch;
         overflow: hidden;
     }
 }
+
+// ---------------------------
+// Gallery
+// ---------------------------
+
+.#{$bs-switch-prefix}-gallery {
+    .#{$bs-switch-prefix}-content {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+    }
+}
