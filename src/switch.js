@@ -424,11 +424,21 @@
 
             /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
             move: function(length) {
+                // 当内容宽度小于或等于控件宽度时，将内容定位在其实位置。
+                if (this.switch.width >= this.width) {
+                    return;
+                }
+
                 this.animate && this.animate.over();
                 this._move(this.offset + length);
             },
 
             standstill: function() {
+                // 当内容宽度小于或等于控件宽度时，将内容定位在其实位置。
+                if (this.switch.width >= this.width) {
+                    return;
+                }
+
                 var self = this,
 
                     i = 0, l = this.panels.length,
@@ -471,6 +481,12 @@
                     promise = deferred.promise,
 
                     panel = this.panels[index];
+
+                // 当内容宽度小于或等于控件宽度时，将内容定位在其实位置。
+                if (this.switch.width >= this.width) {
+                    deferred.resolve();
+                    return promise;
+                }
 
                 // 如果待切换的面板不存在，则不进行切换。
                 if (!panel) {
