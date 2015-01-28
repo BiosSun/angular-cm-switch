@@ -22,10 +22,6 @@ $bs-switch-prefix: ui-switch;
 
 .#{$bs-switch-prefix}-panel {
     z-index: 3;
-
-    img {
-        display: block;
-    }
 }
 
 .#{$bs-switch-prefix}-nav {
