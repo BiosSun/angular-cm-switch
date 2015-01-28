@@ -22,6 +22,14 @@ $bs-switch-prefix: ui-switch;
 
 .#{$bs-switch-prefix}-panel {
     z-index: 3;
+
+    &.hide {
+        display: block;
+    }
+
+    &.active {
+        z-index: 4;
+    }
 }
 
 .#{$bs-switch-prefix}-nav {
