@@ -78,13 +78,13 @@
                         w = Math.abs(x - oX),
                         h = Math.abs(y - oY),
 
-                        r = Math.atan(w / h) * 180 / Math.PI;
+                        r = Math.atan(h / w) * 180 / Math.PI;
 
                     count++;
 
-                    // 当移动角度大于 20 度时视为横向移动
+                    // 当移动角度小于或等于 45 度时视为横向移动
                     // 当连续三次触发 touch move 事件时都为横向移动时，绑定横向滑动事件
-                    if (r > 20) {
+                    if (r <= 45) {
                         if (count === 3) {
                             switchCtrl.oX = x;
 
