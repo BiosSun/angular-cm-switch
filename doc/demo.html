@@ -10,38 +10,28 @@
         <script src="../src/switch.js"></script>
         <script src="demo.js"></script>
     </head>
-    <body ng-app="demo">
-        <bs-switch data-type="gallery">
-            <bs-switch-content>
-                <bs-switch-panel><img alt="" src="images/01.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/02.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/03.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/04.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/05.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/06.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/07.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/08.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/09.jpg" /></bs-switch-panel>
-            </bs-switch-content>
-            <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
-        </bs-switch>
-        <hr />
-        <bs-switch data-type="slider">
-            <bs-switch-content>
-                <bs-switch-panel><img alt="" src="images/w01.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/w02.jpg" /></bs-switch-panel>
-            </bs-switch-content>
-            <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
-        </bs-switch>
-        <hr />
-        <bs-switch data-type="slider">
-            <bs-switch-content>
-                <bs-switch-panel><img alt="" src="images/w01.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/w02.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/w03.jpg" /></bs-switch-panel>
-                <bs-switch-panel><img alt="" src="images/w04.jpg" /></bs-switch-panel>
-            </bs-switch-content>
-            <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
-        </bs-switch>
+    <body ng-app="demo" ng-controller="main">
+        <button ng-click="ref()">刷新数据</button>
+        <div class="box">
+            <bs-switch data-type="gallery">
+                <bs-switch-content>
+                    <bs-switch-panel ng-repeat="img in galleryData">
+                        <img alt="" src="{{img}}" />
+                    </bs-switch-panel>
+                </bs-switch-content>
+                <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
+            </bs-switch>
+        </div>
+
+        <div class="box">
+            <bs-switch data-type="slider">
+                <bs-switch-content>
+                    <bs-switch-panel ng-repeat="img in sliderData">
+                        <img alt="" src="{{img}}" />
+                    </bs-switch-panel>
+                </bs-switch-content>
+                <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
+            </bs-switch>
+        </div>
     </body>
 </html>

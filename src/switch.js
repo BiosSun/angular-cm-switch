@@ -182,6 +182,43 @@
                 }
             },
 
+            removePanel: function(panel) {
+                var index = this.panels.indexOf(panel);
+
+                if (index === -1) return;
+
+                this.panels.splice(index, 1);
+
+                if (panel === this.leftPanel) {
+                    this.leftPanel = undefined;
+                }
+
+                if (panel === this.rightPanel) {
+                    this.rightPanel = undefined;
+                }
+
+                if (index === this.currentPanelIndex) {
+                    if (this.panels.length) {
+                        var newCurrentPanel = this.panels[index];
+
+                        this._transform(newCurrentPanel.el, 0);
+                        newCurrentPanel.$el.removeClass('hide');
+                        newCurrentPanel.$el.addClass('active');
+
+                        this.currentPanel = newCurrentPanel;
+                    }
+                    else {
+                        this.currentPanel = undefined;
+                        this.currentPanelIndex = undefined;
+                    }
+                }
+                else if (index < this.currentPanelIndex) {
+                    this.currentPanelIndex -= 1;
+                }
+
+                this.switch.$scope.$broadcast('bsSwitch.panel.remove', index, panel);
+            },
+
             /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
             move: function(length) {
                 this.animate && this.animate.over();
@@ -376,6 +413,9 @@
                 }
             },
 
+            removePanel: function(panel) {
+            },
+
             /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
             move: function(length) {
                 this.animate && this.animate.over();
@@ -537,6 +577,10 @@
                     self.addNode(index);
                 });
 
+                switchCtrl.$scope.$on('bsSwitch.panel.remove', function($event, index) {
+                    self.removeNode(index);
+                });
+
                 switchCtrl.$scope.$on('bsSwitch.panel.switch', function($event, index) {
                     self.change(index);
                 });
@@ -571,6 +615,17 @@
                     this.nodes.splice(index, 0, node);
                     this.nodes[index - 1].after(node);
                 }
+            },
+
+            removeNode: function(index) {
+                var node = this.nodes.splice(index, 1)[0];
+                if (!node) return;
+
+                if (this.activeNode === node) {
+                    this.change(index);
+                }
+
+                node.remove();
             }
         });
     }
@@ -651,6 +706,7 @@
             restrict: 'E',
             controller: 'bsSwitchPanelCtrl',
             require: ['^^bsSwitch', 'bsSwitchPanel'],
+            scope: true,
             link: link
         };
 
@@ -661,6 +717,7 @@
             if (switchCtrl.isInit) {
                 switchPanelCtrl.init(switchCtrl);
                 switchCtrl.content.addPanel(switchPanelCtrl);
+                addDestroyHandler();
             }
             else {
                 switchCtrl.$scope.$on('switch.init', function() {
@@ -669,6 +726,14 @@
 
                 switchCtrl.$scope.$on('switch.init.end', function() {
                     switchCtrl.content.addPanel(switchPanelCtrl);
+                    addDestroyHandler();
+                });
+            }
+
+            function addDestroyHandler() {
+                $scope.$on('$destroy', function() {
+                    console.info('destory');
+                    switchCtrl.content.removePanel(switchPanelCtrl);
                 });
             }
         }
