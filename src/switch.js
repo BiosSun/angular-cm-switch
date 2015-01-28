@@ -57,16 +57,19 @@
 
             // 绑定触摸事件
             bindTouchEvent: function() {
-                var oX, oY, count;
+                var self = this,
+                    oX, oY, count;
 
                 el.addEventListener('touchstart', function(e) {
-                    oX = e.touches[0].pageX;
-                    oY = e.touches[0].pageY;
+                    if (self.content.panels.length > 1) {
+                        oX = e.touches[0].pageX;
+                        oY = e.touches[0].pageY;
 
-                    count = 0;
+                        count = 0;
 
-                    // 判断是否为横向移动
-                    el.addEventListener('touchmove', hslip);
+                        // 判断是否为横向移动
+                        el.addEventListener('touchmove', hslip);
+                    }
                 });
 
 
