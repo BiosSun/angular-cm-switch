@@ -287,26 +287,33 @@
                 this.panelOffset = offset;
                 this._transform(this.currentPanel.el, offset);
 
-                if (!this.rightPanel) {
-                    var rightPanelIndex = (this.currentPanelIndex + 1) % this.panels.length;
-                    this.rightPanel = this.panels[rightPanelIndex];
-                    this.rightPanel.$el.removeClass('hide');
-                }
-
-                this._transform(this.rightPanel.el, this.panelOffset + this.width);
-
-                if (!this.leftPanel) {
-                    var leftPanelIndex = (this.currentPanelIndex - 1);
-
-                    if (leftPanelIndex === -1) {
-                        leftPanelIndex = this.panels.length - 1;
+                if (this.moveDirection === DIRECTIONS.LEFT) {
+                    if (!this.rightPanel) {
+                        var rightPanelIndex = (this.currentPanelIndex + 1) % this.panels.length;
+                        this.rightPanel = this.panels[rightPanelIndex];
+                        this.rightPanel.$el.removeClass('hide');
                     }
 
-                    this.leftPanel = this.panels[leftPanelIndex];
-                    this.leftPanel.$el.removeClass('hide');
-                }
+                    this.leftPanel = undefined;
 
-                this._transform(this.leftPanel.el, this.panelOffset - this.width);
+                    this._transform(this.rightPanel.el, this.panelOffset + this.width);
+                }
+                else {
+                    if (!this.leftPanel) {
+                        var leftPanelIndex = (this.currentPanelIndex - 1);
+
+                        if (leftPanelIndex === -1) {
+                            leftPanelIndex = this.panels.length - 1;
+                        }
+
+                        this.leftPanel = this.panels[leftPanelIndex];
+                        this.leftPanel.$el.removeClass('hide');
+                    }
+
+                    this.rightPanel = undefined;
+
+                    this._transform(this.leftPanel.el, this.panelOffset - this.width);
+                }
             },
 
             _transform: function(el, x) {
