@@ -24,7 +24,7 @@ $bs-switch-prefix: ui-switch;
     z-index: 3;
 
     &.hide {
-        display: block;
+        display: none;
     }
 
     &.active {
