@@ -330,16 +330,20 @@
                 this.panelOffset = offset;
                 this._transform(this.currentPanel.el, offset);
 
-                if (this.moveDirection === DIRECTIONS.LEFT) {
+                if (offset == 0) {
+                    this._clearLeftPanel();
+                    this._clearRightPanel();
+                }
+                else if (offset < 0) {
                     if (!this.rightPanel) {
                         var rightPanelIndex = (this.currentPanelIndex + 1) % this.panels.length;
                         this.rightPanel = this.panels[rightPanelIndex];
                         this.rightPanel.$el.removeClass('hide');
                     }
 
-                    this.leftPanel = undefined;
-
                     this._transform(this.rightPanel.el, this.panelOffset + this.width);
+
+                    this._clearLeftPanel();
                 }
                 else {
                     if (!this.leftPanel) {
@@ -353,9 +357,23 @@
                         this.leftPanel.$el.removeClass('hide');
                     }
 
-                    this.rightPanel = undefined;
-
                     this._transform(this.leftPanel.el, this.panelOffset - this.width);
+
+                    this._clearRightPanel();
+                }
+            },
+
+            _clearLeftPanel: function() {
+                if (this.leftPanel) {
+                    this.leftPanel.$el.addClass('hide');
+                    this.leftPanel = undefined;
+                }
+            },
+
+            _clearRightPanel: function() {
+                if (this.rightPanel) {
+                    this.rightPanel.$el.addClass('hide');
+                    this.rightPanel = undefined;
                 }
             },
 
