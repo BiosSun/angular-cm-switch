@@ -701,8 +701,6 @@
                 $scope.classPrefix = 'ui-switch';
             }
 
-            console.info($scope);
-
             switchCtrl.init();
         }
     }
@@ -772,7 +770,6 @@
 
             function addDestroyHandler() {
                 $scope.$on('$destroy', function() {
-                    console.info('destory');
                     switchCtrl.content.removePanel(switchPanelCtrl);
                 });
             }
