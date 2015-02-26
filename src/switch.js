@@ -79,8 +79,8 @@
                         y = e.touches[0].pageY,
 
                         // 以上一次触摸事件的触发点为原点，计算当前触摸事件的触发点的角度
-                        w = Math.abs(x - oX),
-                        h = Math.abs(y - oY),
+                        w = x - oX,
+                        h = y - oY,
                         r = Math.abs( Math.atan2(h, w) * 180 / Math.PI ),
 
                         // 判断是否是横向滚动
