@@ -1,6 +1,6 @@
 {
   "name": "angular-bs-switch",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "A switch widget for mobile, use angular.",
   "devDependencies": {}
 }
