@@ -78,16 +78,18 @@
                     var x = e.touches[0].pageX,
                         y = e.touches[0].pageY,
 
+                        // 以上一次触摸事件的触发点为原点，计算当前触摸事件的触发点的角度
                         w = Math.abs(x - oX),
                         h = Math.abs(y - oY),
+                        r = Math.abs( Math.atan2(h, w) * 180 / Math.PI ),
 
-                        r = Math.atan(h / w) * 180 / Math.PI;
+                        // 判断是否是横向滚动
+                        hs = r <= 80 || r >= 100;
 
                     count++;
 
-                    // 当移动角度小于或等于 45 度时视为横向移动
                     // 当连续三次触发 touch move 事件时都为横向移动时，绑定横向滑动事件
-                    if (r <= 45) {
+                    if (hs) {
                         if (count === 3) {
                             switchCtrl.oX = x;
 
