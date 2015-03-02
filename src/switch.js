@@ -51,6 +51,11 @@
                 $scope.$broadcast('switch.init.end');
             },
 
+            refresh: function() {
+                this.width = el.clientWidth;
+                $scope.$broadcast('switch.refresh');
+            },
+
             setSwitchContent: function(switchContent) {
                 this.switchContent = switchContent;
             },
@@ -166,8 +171,18 @@
             leftPanel: undefined,
 
             init: function(switchCtrl) {
+                var self = this;
+
                 this.switch = switchCtrl;
                 $el.addClass(switchCtrl.config.classPrefix + '-content');
+                this.width = el.clientWidth;
+
+                switchCtrl.$scope.$on('switch.refresh', function() {
+                    self.refresh();
+                });
+            },
+
+            refresh: function() {
                 this.width = el.clientWidth;
             },
 
@@ -419,9 +434,15 @@
             animate: undefined,
 
             init: function(switchCtrl) {
+                var self = this;
+
                 this.switch = switchCtrl;
                 $el.addClass(switchCtrl.config.classPrefix + '-content');
                 $el.css('width', self.width);
+
+                // switchCtrl.$scope.$on('switch.refresh', function() {
+                //     self.refresh();
+                // });
             },
 
             addPanel: function(panel) {
@@ -582,17 +603,51 @@
             el: el,
 
             init: function(switchCtrl) {
-                $el.addClass(switchCtrl.config.classPrefix + '-panel');
+                var self = this;
 
+                $el.addClass(switchCtrl.config.classPrefix + '-panel');
+                this.outerWidth = this.getOuterWidth();
+
+                switchCtrl.$scope.$on('switch.refresh', function() {
+                    self.refresh();
+                });
+            },
+
+            refresh: function() {
+                console.info('refresh switch panel');
+                this.outerWidth = this.getOuterWidth();
+            },
+
+            getOuterWidth: function() {
                 var elStyles = window.getComputedStyle(el),
 
-                    marginRight = parseInt(elStyles.marginRight, 10),
-                    marginLeft = parseInt(elStyles.marginLeft, 10),
-                    offsetWidth = el.offsetWidth,
+                    computedDisplay = elStyles.display,
+                    inlineDisplay = el.style.display,
 
-                    outerWidth = marginRight + marginLeft + offsetWidth;
+                    isHide = computedDisplay === 'none',
 
-                this.outerWidth = outerWidth;
+                    marginRight, marginLeft, offsetWidth, outerWidth;
+
+                if (isHide) {
+                    el.style.display = 'block';
+                }
+
+                marginRight = parseInt(elStyles.marginRight, 10),
+                marginLeft = parseInt(elStyles.marginLeft, 10),
+                offsetWidth = el.offsetWidth,
+
+                outerWidth = marginRight + marginLeft + offsetWidth;
+
+                if (isHide) {
+                    if (inlineDisplay === 'none') {
+                        el.style.display = 'none';
+                    }
+                    else if (!inlineDisplay) {
+                        delete el.style.display;
+                    }
+                }
+
+                return outerWidth;
             }
         });
     }
@@ -704,6 +759,16 @@
             }
 
             switchCtrl.init();
+
+            window.addEventListener('resize', refresh);
+
+            $scope.$on('$destroy', function() {
+                window.removeEventListener('resize', refresh);
+            });
+
+            function refresh() {
+                switchCtrl.refresh();
+            }
         }
     }
 
