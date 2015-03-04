@@ -415,12 +415,6 @@
             // 存放所有的面板
             panels: [],
 
-            // 当前焦点面板
-            currentPanel: undefined,
-
-            // 当前焦点面板的索引
-            currentPanelIndex: undefined,
-
             // 内容区域宽度
             width: 0,
 
@@ -451,26 +445,31 @@
                 el.style.width = this.width + 'px';
 
                 this.switch.$scope.$broadcast('bsSwitch.panel.add', this.panels.length - 1);
-
-                if (!this.currentPanel) {
-                    this.currentPanel = panel;
-                    this.currentPanelIndex = this.panels.length - 1;
-
-                    this.switch.$scope.$broadcast('bsSwitch.panel.switch', this.currentPanelIndex);
-                }
             },
 
             removePanel: function(panel) {
+                var index = this.panels.indexOf(panel);
+
+                if (index !== -1) {
+                    this.panels.splice(index, 1);
+                    this.switch.$scope.$broadcast('bsSwitch.panel.remove', index, panel);
+                    this.width -= panel.outerWidth;
+                    el.style.width = this.width + 'px';
+                }
             },
 
             /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
             move: function(length) {
-                // 当内容宽度小于或等于控件宽度时，将内容定位在其实位置。
+                // 当内容宽度小于或等于控件宽度时，不应用滚动
                 if (this.switch.width >= this.width) {
                     return;
                 }
 
-                this.animate && this.animate.over();
+                if (this.animate) {
+                    this.animate.over();
+                    this.animate = undefined;
+                }
+
                 this._move(this.offset + length);
             },
 
@@ -543,9 +542,6 @@
                     return promise;
                 }
 
-                this.currentPanel = panel;
-                this.currentPanelIndex = index;
-
                 this.switch.$scope.$broadcast('bsSwitch.panel.switch', index);
 
                 if (this.animate) {
@@ -569,7 +565,7 @@
             },
 
             _move: function(offset) {
-                offset = Math.max(Math.min(0, offset),  this.switch.width - this.width);
+                offset = Math.max(Math.min(0, offset), -(this.width - this.switch.width));
 
                 if (offset !== this.offset) {
                     this.moveDirection = offset >= this.offset ? 1 : -1;
