@@ -89,7 +89,7 @@
                         r = Math.abs( Math.atan2(h, w) * 180 / Math.PI ),
 
                         // 判断是否是横向滚动
-                        hs = r <= 80 || r >= 100;
+                        hs = r <= 60 || r >= 120;
 
                     count++;
 
