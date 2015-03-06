@@ -5,3 +5,8 @@ body {
 .box {
     margin-bottom: 20px;
 }
+
+.ui-switch-panel img {
+    width: 100%;
+    height: 100%;
+}

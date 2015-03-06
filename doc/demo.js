@@ -27,11 +27,24 @@ angular.module('demo', ['bsSwitch'])
                 "images/09.jpg"
             ];
 
+            $scope.fiveItemGalleryData = [
+                "images/01.jpg",
+                "images/02.jpg",
+                "images/03.jpg",
+                "images/04.jpg",
+                "images/05.jpg"
+            ];
+
             $scope.sliderData = [
                 "images/w01.jpg",
                 "images/w02.jpg",
                 "images/w03.jpg",
                 "images/w04.jpg"
+            ];
+
+            $scope.twoItemSliderData = [
+                "images/w01.jpg",
+                "images/w02.jpg"
             ];
         }
     });

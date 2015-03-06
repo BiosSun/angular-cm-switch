@@ -12,10 +12,31 @@
     </head>
     <body ng-app="demo" ng-controller="main">
         <button ng-click="ref()">刷新数据</button>
+
+        <div class="box">
+            <bs-switch data-type="gallery">
+                <bs-switch-content>
+                    <bs-switch-panel ng-repeat="img in fiveItemGalleryData">
+                        <img alt="" src="{{img}}" />
+                    </bs-switch-panel>
+                </bs-switch-content>
+            </bs-switch>
+        </div>
+
         <div class="box">
             <bs-switch data-type="gallery">
                 <bs-switch-content>
                     <bs-switch-panel ng-repeat="img in galleryData">
+                        <img alt="" src="{{img}}" />
+                    </bs-switch-panel>
+                </bs-switch-content>
+            </bs-switch>
+        </div>
+
+        <div class="box">
+            <bs-switch data-type="slider">
+                <bs-switch-content>
+                    <bs-switch-panel ng-repeat="img in twoItemSliderData">
                         <img alt="" src="{{img}}" />
                     </bs-switch-panel>
                 </bs-switch-content>
@@ -24,7 +45,7 @@
         </div>
 
         <div class="box">
-            <bs-switch data-type="slider">
+            <bs-switch data-type="slider" auto-play="1000">
                 <bs-switch-content>
                     <bs-switch-panel ng-repeat="img in sliderData">
                         <img alt="" src="{{img}}" />

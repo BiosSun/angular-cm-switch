@@ -7,7 +7,6 @@
 
 
 .ui-switch {
-    width: 100%;
     z-index: 1;
     overflow: hidden;
 }
@@ -56,6 +55,7 @@
 
 .ui-switch-gallery {
     height: 124px;
+    margin: 0 1em;
 }
 
 .ui-switch-gallery .ui-switch-content {
@@ -70,6 +70,10 @@
     width: 160px;
     height: 124px;
     margin: 0 1em 0 0;
+}
+
+.ui-switch-gallery .ui-switch-panel.last {
+    margin-right: 0;
 }
 
 .ui-switch-gallery .ui-switch-panel img {
