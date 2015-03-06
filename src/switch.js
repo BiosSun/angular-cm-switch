@@ -612,7 +612,6 @@
             },
 
             refresh: function() {
-                console.info('refresh switch panel');
                 this.outerWidth = this.getOuterWidth();
             },
 
