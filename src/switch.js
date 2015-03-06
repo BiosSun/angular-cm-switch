@@ -436,9 +436,13 @@
                 $el.addClass(switchCtrl.config.classPrefix + '-content');
                 $el.css('width', self.width);
 
-                // switchCtrl.$scope.$on('switch.refresh', function() {
-                //     self.refresh();
-                // });
+                switchCtrl.$scope.$on('switch.refresh', function() {
+                    self.refresh();
+                });
+            },
+
+            refresh: function() {
+                this._move(this.offset);
             },
 
             addPanel: function(panel) {
@@ -567,7 +571,7 @@
             },
 
             _move: function(offset) {
-                offset = Math.max(Math.min(0, offset), -(this.width - this.switch.width));
+                offset = Math.min(0, Math.max(offset,-(this.width - this.switch.width)));
 
                 if (offset !== this.offset) {
                     this.moveDirection = offset >= this.offset ? 1 : -1;
