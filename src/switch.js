@@ -604,6 +604,11 @@
                 var self = this;
 
                 $el.addClass(switchCtrl.config.classPrefix + '-panel');
+
+                if ($scope.$last) {
+                    $el.addClass('last');
+                }
+
                 this.outerWidth = this.getOuterWidth();
 
                 switchCtrl.$scope.$on('switch.refresh', function() {
