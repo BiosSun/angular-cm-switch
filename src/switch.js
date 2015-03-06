@@ -347,11 +347,10 @@
                 this.panelOffset = offset;
                 this._transform(this.currentPanel.el, offset);
 
-                if (offset == 0) {
+                // 当偏移值小于 0 时，为向左移动，并露出右面板
+                if (offset < 0) {
                     this._clearLeftPanel();
-                    this._clearRightPanel();
-                }
-                else if (offset < 0) {
+
                     if (!this.rightPanel) {
                         var rightPanelIndex = (this.currentPanelIndex + 1) % this.panels.length;
                         this.rightPanel = this.panels[rightPanelIndex];
@@ -359,10 +358,11 @@
                     }
 
                     this._transform(this.rightPanel.el, this.panelOffset + this.width);
-
-                    this._clearLeftPanel();
                 }
-                else {
+                // 当偏移值大于 0 时，为向右移动，并露出左面板
+                else if (offset > 0) {
+                    this._clearRightPanel();
+
                     if (!this.leftPanel) {
                         var leftPanelIndex = (this.currentPanelIndex - 1);
 
@@ -375,7 +375,9 @@
                     }
 
                     this._transform(this.leftPanel.el, this.panelOffset - this.width);
-
+                }
+                else {
+                    this._clearLeftPanel();
                     this._clearRightPanel();
                 }
             },
