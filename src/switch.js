@@ -180,10 +180,38 @@
                 switchCtrl.$scope.$on('switch.refresh', function() {
                     self.refresh();
                 });
+
+                this.autoPlayTiming = switchCtrl.$scope.autoPlay;
+                this.autoPlay();
             },
 
             refresh: function() {
                 this.width = el.clientWidth;
+            },
+
+            autoPlay: function() {
+                var self = this;
+
+                if (!this.autoPlayTiming) {
+                    return false;
+                }
+
+                this.stopAutoPlay();
+
+                this.autoPlayTimer = setTimeout(function() {
+                    var nextIndex = (self.currentPanelIndex + 1) % self.panels.length;
+                    self.toggle(nextIndex, DIRECTIONS.LEFT);
+                    self.autoPlay();
+                }, self.autoPlayTiming);
+
+                return true;
+            },
+
+            stopAutoPlay: function() {
+                if (this.autoPlayTimer) {
+                    clearTimeout(this.autoPlayTimer);
+                    this.autoPlayTimer = undefined;
+                }
             },
 
             addPanel: function(panel) {
@@ -245,6 +273,7 @@
             /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
             move: function(length) {
                 this.animate && this.animate.over();
+                this.autoPlayTimer && this.stopAutoPlay();
                 this._move(this.panelOffset + length);
             },
 
@@ -279,11 +308,9 @@
                     endOffset;
 
                 if (direction === DIRECTIONS.LEFT) {
-                    this.rightPanel = panel;
                     endOffset = -(this.currentPanel.outerWidth);
                 }
                 else if(direction === DIRECTIONS.RIGHT) {
-                    this.leftPanel = panel;
                     endOffset = this.currentPanel.outerWidth;
                 }
                 else {
@@ -297,9 +324,10 @@
                     this.animate.over();
                 }
 
+                this.stopAutoPlay();
                 this.animate = new Animate({
                     target: this.currentPanel.el,
-                    speed: 100,
+                    speed: 200,
                     frame: function(target, p, e) {
                         self._move(startOffset - (startOffset - endOffset) * e);
                     },
@@ -332,6 +360,7 @@
                         self.panelOffset = 0;
 
                         self.animate = undefined;
+                        self.autoPlay();
 
                         deferred.resolve();
                     }
@@ -749,8 +778,10 @@
 
         function link($scope, $el, $attrs, switchCtrl) {
             if ($attrs.$attr.autoPlay && $scope.autoPlay === undefined) {
-                $scope.autoPlay = true;
+                $scope.autoPlay = 3;
             }
+
+            $scope.autoPlay = parseInt($scope.autoPlay, 10);
 
             if (!$scope.type) {
                 $scope.type = 'slider';
