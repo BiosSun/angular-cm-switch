@@ -307,6 +307,11 @@
                     startOffset = this.panelOffset,
                     endOffset;
 
+                if (!panel) {
+                    deferred.resolve();
+                    return promise;
+                }
+
                 if (direction === DIRECTIONS.LEFT) {
                     endOffset = -(this.currentPanel.outerWidth);
                 }
