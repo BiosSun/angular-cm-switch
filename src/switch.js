@@ -341,24 +341,15 @@
                         self.currentPanel.$el.addClass('hide');
 
                         if (direction === DIRECTIONS.LEFT) {
-                            self.currentPanel = self.rightPanel;
                             self.rightPanel = undefined;
-
-                            if (self.leftPanel) {
-                                self.leftPanel.$el.addClass('hide');
-                                self.leftPanel = undefined;
-                            }
+                            self._clearLeftPanel();
                         }
                         else {
-                            self.currentPanel = self.leftPanel;
                             self.leftPanel = undefined;
-
-                            if (self.rightPanel) {
-                                self.rightPanel.$el.addClass('hide');
-                                self.rightPanel = undefined;
-                            }
+                            self._clearRightPanel();
                         }
 
+                        self.currentPanel = self.panels[index];
                         self.currentPanel.$el.addClass('active');
                         self.currentPanelIndex = index;
 
@@ -377,43 +368,50 @@
             },
 
             _move: function(offset) {
+                var rightPanel = this.rightPanel,
+                    leftPanel = this.leftPanel;
+
                 this.moveDirection = offset >= this.panelOffset ? DIRECTIONS.RIGHT : DIRECTIONS.LEFT;
                 this.panelOffset = offset;
                 this._transform(this.currentPanel.el, offset);
 
                 // 当偏移值小于 0 时，为向左移动，并露出右面板
                 if (offset < 0) {
-                    this._clearLeftPanel();
+                    leftPanel && this._clearLeftPanel();
 
-                    if (!this.rightPanel) {
-                        var rightPanelIndex = (this.currentPanelIndex + 1) % this.panels.length;
-                        this.rightPanel = this.panels[rightPanelIndex];
-                        this.rightPanel.$el.removeClass('hide');
+                    if (!rightPanel) {
+                        rightPanel = this.rightPanel = this._getNextPanelByIndex(this.currentPanelIndex);
+                        rightPanel.$el.removeClass('hide');
                     }
 
-                    this._transform(this.rightPanel.el, this.panelOffset + this.width);
+                    this._transform(rightPanel.el, this.panelOffset + this.width);
                 }
                 // 当偏移值大于 0 时，为向右移动，并露出左面板
                 else if (offset > 0) {
-                    this._clearRightPanel();
+                    rightPanel && this._clearRightPanel();
 
-                    if (!this.leftPanel) {
-                        var leftPanelIndex = (this.currentPanelIndex - 1);
-
-                        if (leftPanelIndex === -1) {
-                            leftPanelIndex = this.panels.length - 1;
-                        }
-
-                        this.leftPanel = this.panels[leftPanelIndex];
-                        this.leftPanel.$el.removeClass('hide');
+                    if (!leftPanel) {
+                        leftPanel = this.leftPanel = this._getPrevPanelByIndex(this.currentPanelIndex);
+                        leftPanel.$el.removeClass('hide');
                     }
 
-                    this._transform(this.leftPanel.el, this.panelOffset - this.width);
+                    this._transform(leftPanel.el, this.panelOffset - this.width);
                 }
                 else {
                     this._clearLeftPanel();
                     this._clearRightPanel();
                 }
+            },
+
+            _getNextPanelByIndex: function(index) {
+                var ps = this.panels;
+                return ps[(index + 1) % ps.length];
+            },
+
+            _getPrevPanelByIndex: function(index) {
+                var ps = this.panels;
+                if (index === 0) index = ps.length;
+                return ps[index - 1];
             },
 
             _clearLeftPanel: function() {
