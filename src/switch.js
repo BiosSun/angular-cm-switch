@@ -806,8 +806,15 @@
                 window.removeEventListener('resize', refresh);
             });
 
-            function refresh() {
-                switchCtrl.refresh();
+            function refresh(e) {
+                try {
+                    if (!(e instanceof CustomEvent)) {
+                        switchCtrl.refresh();
+                    }
+                }
+                catch (e) {
+                    switchCtrl.refresh();
+                }
             }
         }
     }
