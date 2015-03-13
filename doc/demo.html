@@ -55,6 +55,55 @@
             </bs-switch>
         </div>
 
+        <div class="box">
+            <bs-switch data-type="slider" data-auto-play="20000" data-carousel="false">
+                <bs-switch-content>
+                    <bs-switch-panel ng-repeat="img in sliderData">
+                        <img alt="" src="{{img}}" />
+                    </bs-switch-panel>
+                </bs-switch-content>
+                <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
+            </bs-switch>
+        </div>
+
+        <div class="box">
+            <bs-switch data-type="slider" data-carousel="false" style="background: #444; height: 400px;">
+                <bs-switch-content>
+                    <bs-switch-panel>
+                        <bs-switch data-type="slider" data-auto-play="40000">
+                            <bs-switch-content>
+                                <bs-switch-panel ng-repeat="img in sliderData">
+                                    <img alt="" src="{{img}}" />
+                                </bs-switch-panel>
+                            </bs-switch-content>
+                            <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
+                        </bs-switch>
+                    </bs-switch-panel>
+                    <bs-switch-panel>
+                        <bs-switch data-type="slider" data-auto-play="1000">
+                            <bs-switch-content>
+                                <bs-switch-panel ng-repeat="img in sliderData">
+                                    <img alt="" src="{{img}}" />
+                                </bs-switch-panel>
+                            </bs-switch-content>
+                            <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
+                        </bs-switch>
+                    </bs-switch-panel>
+                    <bs-switch-panel>
+                        <bs-switch data-type="slider" data-auto-play="40000">
+                            <bs-switch-content>
+                                <bs-switch-panel ng-repeat="img in sliderData">
+                                    <img alt="" src="{{img}}" />
+                                </bs-switch-panel>
+                            </bs-switch-content>
+                            <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
+                        </bs-switch>
+                    </bs-switch-panel>
+                </bs-switch-content>
+                <bs-switch-nav class="ui-switch-nav"></bs-switch-nav>
+            </bs-switch>
+        </div>
+
         <h2>Bug</h2>
         <h3> 当面板数为零时，设置自动播放，会抛出异常。</h3>
         <div class="box">

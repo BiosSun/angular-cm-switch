@@ -255,27 +255,41 @@
 
             /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
             move: function(length) {
+                var offset = this.panelOffset + length;
+
                 this.animate && this.animate.over();
                 this.autoPlayTimer && this.stopAutoPlay();
-                this._move(this.panelOffset + length);
+
+                if (!this.carousel && ((offset > 0 && this.currentPanelIndex === 0)
+                    || (offset < 0 && this.currentPanelIndex === this.panels.length - 1))) {
+                    return;
+                }
+                else {
+                    this._move(this.panelOffset + length);
+                }
             },
 
             standstill: function() {
-                var index = this.currentPanelIndex;
+                var index = this.currentPanelIndex,
+                    direction = this.moveDirection,
+                    toggleIndex;
 
-                if (this.moveDirection === DIRECTIONS.LEFT) {
-                    index += 1;
-                    index %= this.panels.length;
+                if (!this.carousel && ((direction === DIRECTIONS.RIGHT && index === 0)
+                    || (direction === DIRECTIONS.LEFT && index === this.panels.length - 1))) {
+                    this.autoPlay();
                 }
                 else {
-                    index -= 1;
-
-                    if (index === -1) {
-                        index = this.panels.length - 1;
+                    if (Math.abs(this.panelOffset) < this.currentPanel.outerWidth / 4) {
+                        toggleIndex = this.currentPanelIndex;
                     }
-                }
+                    else {
+                        toggleIndex = this.moveDirection === DIRECTIONS.LEFT ?
+                            this._getNextPanelIndexByIndex(index) :
+                            this._getPrevPanelIndexByIndex(index);
+                    }
 
-                this.toggle(index, this.moveDirection);
+                    this.toggle(toggleIndex, this.moveDirection);
+                }
             },
 
             /** 切换面板 */
@@ -295,7 +309,10 @@
                     return promise;
                 }
 
-                if (direction === DIRECTIONS.LEFT) {
+                if (index === this.currentPanelIndex) {
+                    endOffset = 0;
+                }
+                else if (direction === DIRECTIONS.LEFT) {
                     endOffset = -(this.currentPanel.outerWidth);
                 }
                 else if(direction === DIRECTIONS.RIGHT) {
@@ -320,21 +337,23 @@
                         self._move(startOffset - (startOffset - endOffset) * e);
                     },
                     over: function() {
-                        self.currentPanel.$el.removeClass('active');
-                        self.currentPanel.$el.addClass('hide');
+                        if (index !== self.currentPanelIndex) {
+                            self.currentPanel.$el.removeClass('active');
+                            self.currentPanel.$el.addClass('hide');
 
-                        if (direction === DIRECTIONS.LEFT) {
-                            self.rightPanel = undefined;
-                            self._clearLeftPanel();
-                        }
-                        else {
-                            self.leftPanel = undefined;
-                            self._clearRightPanel();
-                        }
+                            if (direction === DIRECTIONS.LEFT) {
+                                self.rightPanel = undefined;
+                                self._clearLeftPanel();
+                            }
+                            else {
+                                self.leftPanel = undefined;
+                                self._clearRightPanel();
+                            }
 
-                        self.currentPanel = self.panels[index];
-                        self.currentPanel.$el.addClass('active');
-                        self.currentPanelIndex = index;
+                            self.currentPanel = self.panels[index];
+                            self.currentPanel.$el.addClass('active');
+                            self.currentPanelIndex = index;
+                        }
 
                         self.panelOffset = 0;
 
@@ -410,34 +429,28 @@
                 }
             },
 
-            /**
-             * 获取所传入索引对应面板的下一个面板，如果传入索引为最后一项，且 carousel 为 true，则返回第一个面板。
-             * 否则返回 undefined。
-             */
             _getNextPanelByIndex: function(index) {
+                return this.panels[this._getNextPanelIndexByIndex(index)];
+            },
+
+            _getPrevPanelByIndex: function(index) {
+                return this.panels[this._getPrevPanelIndexByIndex(index)];
+            },
+
+            _getNextPanelIndexByIndex: function(index) {
                 var ps = this.panels,
                     ni = index + 1;
 
-                if (ni === ps.length) {
-                    ni = 0;
-                }
-
-                return ps[ni];
+                if (ni === ps.length) { ni = 0; }
+                return ni;
             },
 
-            /**
-             * 获取所传入索引对应面板的上一个面板，如果传入索引为第一项，且 carousel 为 true，则返回最后一个面板。
-             * 否则返回 undefined。
-             */
-            _getPrevPanelByIndex: function(index) {
+            _getPrevPanelIndexByIndex: function(index) {
                 var ps = this.panels,
                     ni = index - 1;
 
-                if (ni === -1) {
-                    ni = ps.length - 1;
-                }
-
-                return ps[ni];
+                if (ni === -1) { ni = ps.length - 1; }
+                return ni;
             },
 
             _clearLeftPanel: function() {
