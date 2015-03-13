@@ -170,6 +170,12 @@
             // 当面面板的左面板
             leftPanel: undefined,
 
+            // 自动播放的时间间隔（每次播放结束后到下一次播放开始的时间）
+            autoPlayTiming: undefined,
+
+            // 是否可循环切换
+            carousel: false,
+
             init: function(switchCtrl) {
                 var self = this;
 
@@ -183,35 +189,12 @@
 
                 this.autoPlayTiming = switchCtrl.$scope.autoPlay;
                 this.autoPlay();
+
+                this.carousel = switchCtrl.$scope.carousel;
             },
 
             refresh: function() {
                 this.width = el.clientWidth;
-            },
-
-            autoPlay: function() {
-                var self = this;
-
-                if (!this.autoPlayTiming) {
-                    return false;
-                }
-
-                this.stopAutoPlay();
-
-                this.autoPlayTimer = setTimeout(function() {
-                    var nextIndex = (self.currentPanelIndex + 1) % self.panels.length;
-                    self.toggle(nextIndex, DIRECTIONS.LEFT);
-                    self.autoPlay();
-                }, self.autoPlayTiming);
-
-                return true;
-            },
-
-            stopAutoPlay: function() {
-                if (this.autoPlayTimer) {
-                    clearTimeout(this.autoPlayTimer);
-                    this.autoPlayTimer = undefined;
-                }
             },
 
             addPanel: function(panel) {
@@ -367,6 +350,30 @@
                 return promise;
             },
 
+            autoPlay: function() {
+                var self = this;
+
+                if (!this.autoPlayTiming) {
+                    return false;
+                }
+
+                this.stopAutoPlay();
+
+                this.autoPlayTimer = setTimeout(function() {
+                    var nextIndex = (self.currentPanelIndex + 1) % self.panels.length;
+                    self.toggle(nextIndex, DIRECTIONS.LEFT);
+                }, self.autoPlayTiming);
+
+                return true;
+            },
+
+            stopAutoPlay: function() {
+                if (this.autoPlayTimer) {
+                    clearTimeout(this.autoPlayTimer);
+                    this.autoPlayTimer = undefined;
+                }
+            },
+
             _move: function(offset) {
                 var rightPanel = this.rightPanel,
                     leftPanel = this.leftPanel;
@@ -403,15 +410,34 @@
                 }
             },
 
+            /**
+             * 获取所传入索引对应面板的下一个面板，如果传入索引为最后一项，且 carousel 为 true，则返回第一个面板。
+             * 否则返回 undefined。
+             */
             _getNextPanelByIndex: function(index) {
-                var ps = this.panels;
-                return ps[(index + 1) % ps.length];
+                var ps = this.panels,
+                    ni = index + 1;
+
+                if (ni === ps.length) {
+                    ni = 0;
+                }
+
+                return ps[ni];
             },
 
+            /**
+             * 获取所传入索引对应面板的上一个面板，如果传入索引为第一项，且 carousel 为 true，则返回最后一个面板。
+             * 否则返回 undefined。
+             */
             _getPrevPanelByIndex: function(index) {
-                var ps = this.panels;
-                if (index === 0) index = ps.length;
-                return ps[index - 1];
+                var ps = this.panels,
+                    ni = index - 1;
+
+                if (ni === -1) {
+                    ni = ps.length - 1;
+                }
+
+                return ps[ni];
             },
 
             _clearLeftPanel: function() {
@@ -771,10 +797,10 @@
             restrict: 'E',
             controller: 'bsSwitchCtrl',
             scope: {
-                step: '=?',
                 classPrefix: '@?',
                 autoPlay: '=?',
-                type: '@?'
+                type: '@?',
+                carousel: '@?'
             },
             link: link
         };
@@ -790,13 +816,13 @@
                 $scope.type = 'slider';
             }
 
-            if (!$scope.step) {
-                $scope.step = 1;
-            }
-
             if (!$scope.classPrefix) {
                 $scope.classPrefix = 'ui-switch';
             }
+
+            $scope.carousel = $scope.carousel === 'false' ? false :
+                              $scope.carousel === 'true' ? true :
+                              ($scope.carousel || true);
 
             switchCtrl.init();
 
