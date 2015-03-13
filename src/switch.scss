@@ -1,25 +1,25 @@
 @charset "utf-8";
 
-$bs-switch-prefix: ui-switch;
+$cm-switch-prefix: ui-switch;
 
-.#{$bs-switch-prefix},
-.#{$bs-switch-prefix}-content,
-.#{$bs-switch-prefix}-panel {
+.#{$cm-switch-prefix},
+.#{$cm-switch-prefix}-content,
+.#{$cm-switch-prefix}-panel {
     display: block;
     position: relative;
 }
 
 
-.#{$bs-switch-prefix} {
+.#{$cm-switch-prefix} {
     z-index: 1;
     overflow: hidden;
 }
 
-.#{$bs-switch-prefix}-content {
+.#{$cm-switch-prefix}-content {
     z-index: 2;
 }
 
-.#{$bs-switch-prefix}-panel {
+.#{$cm-switch-prefix}-panel {
     z-index: 3;
 
     &.hide {
@@ -31,7 +31,7 @@ $bs-switch-prefix: ui-switch;
     }
 }
 
-.#{$bs-switch-prefix}-nav {
+.#{$cm-switch-prefix}-nav {
     display: block;
 
     position: absolute;
@@ -46,7 +46,7 @@ $bs-switch-prefix: ui-switch;
     text-align: center;
 }
 
-.#{$bs-switch-prefix}-nav-item {
+.#{$cm-switch-prefix}-nav-item {
     display: inline-block;
     margin: 0 2px;
     color: #fff;
@@ -61,9 +61,9 @@ $bs-switch-prefix: ui-switch;
 // Slider
 // ---------------------------
 
-.#{$bs-switch-prefix}-slider {
-    .#{$bs-switch-prefix}-content,
-    .#{$bs-switch-prefix}-panel {
+.#{$cm-switch-prefix}-slider {
+    .#{$cm-switch-prefix}-content,
+    .#{$cm-switch-prefix}-panel {
         position: absolute;
         left: 0;
         right: 0;
@@ -78,8 +78,8 @@ $bs-switch-prefix: ui-switch;
 // Gallery
 // ---------------------------
 
-.#{$bs-switch-prefix}-gallery {
-    .#{$bs-switch-prefix}-content {
+.#{$cm-switch-prefix}-gallery {
+    .#{$cm-switch-prefix}-content {
         position: absolute;
         top: 0;
         bottom: 0;

@@ -1,25 +1,25 @@
 (function() {
 
-    angular.module('bsSwitch', [])
+    angular.module('cmSwitch', [])
 
-        .controller('bsSwitchCtrl', bsSwitchCtrl)
-        .controller('bsSwitchContentGalleryCtrl', bsSwitchContentGalleryCtrl)
-        .controller('bsSwitchContentSliderCtrl', bsSwitchContentSliderCtrl)
-        .controller('bsSwitchPanelCtrl', bsSwitchPanelCtrl)
-        .controller('bsSwitchNavCtrl', bsSwitchNavCtrl)
+        .controller('cmSwitchCtrl', cmSwitchCtrl)
+        .controller('cmSwitchContentGalleryCtrl', cmSwitchContentGalleryCtrl)
+        .controller('cmSwitchContentSliderCtrl', cmSwitchContentSliderCtrl)
+        .controller('cmSwitchPanelCtrl', cmSwitchPanelCtrl)
+        .controller('cmSwitchNavCtrl', cmSwitchNavCtrl)
 
-        .directive('bsSwitch', bsSwitch)
-        .directive('bsSwitchContent', bsSwitchContent)
-        .directive('bsSwitchPanel', bsSwitchPanel)
-        .directive('bsSwitchNav', bsSwitchNav);
+        .directive('cmSwitch', cmSwitch)
+        .directive('cmSwitchContent', cmSwitchContent)
+        .directive('cmSwitchPanel', cmSwitchPanel)
+        .directive('cmSwitchNav', cmSwitchNav);
 
     var DIRECTIONS = {
         LEFT: -1,
         RIGHT: 1
     };
 
-    bsSwitchCtrl.$inject = '$scope, $element, $attrs'.split(', ');
-    function bsSwitchCtrl($scope, $el, $attrs) {
+    cmSwitchCtrl.$inject = '$scope, $element, $attrs'.split(', ');
+    function cmSwitchCtrl($scope, $el, $attrs) {
         var el = $el[0],
             switchCtrl = this;
 
@@ -134,8 +134,8 @@
         });
     }
 
-    bsSwitchContentSliderCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
-    function bsSwitchContentSliderCtrl($scope, $el, $attrs, $q) {
+    cmSwitchContentSliderCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
+    function cmSwitchContentSliderCtrl($scope, $el, $attrs, $q) {
         var el = $el[0],
             switchContentCtrl = this;
 
@@ -201,7 +201,7 @@
                 this.panels.push(panel);
 
                 var index = this.panels.length - 1;
-                this.switch.$scope.$broadcast('bsSwitch.panel.add', index);
+                this.switch.$scope.$broadcast('cmSwitch.panel.add', index);
 
                 if (!this.currentPanel) {
                     this.currentPanel = panel;
@@ -209,7 +209,7 @@
 
                     this.currentPanel.$el.addClass('active');
 
-                    this.switch.$scope.$broadcast('bsSwitch.panel.switch', this.currentPanelIndex);
+                    this.switch.$scope.$broadcast('cmSwitch.panel.switch', this.currentPanelIndex);
                 }
                 else {
                     panel.$el.addClass('hide');
@@ -250,7 +250,7 @@
                     this.currentPanelIndex -= 1;
                 }
 
-                this.switch.$scope.$broadcast('bsSwitch.panel.remove', index, panel);
+                this.switch.$scope.$broadcast('cmSwitch.panel.remove', index, panel);
             },
 
             /** 移动内容区域，移动距离为正值时，向右移动，反之向左移动。 */
@@ -323,7 +323,7 @@
                     return promise;
                 }
 
-                this.switch.$scope.$broadcast('bsSwitch.panel.switch', index);
+                this.switch.$scope.$broadcast('cmSwitch.panel.switch', index);
 
                 if (this.animate) {
                     this.animate.over();
@@ -476,8 +476,8 @@
         });
     };
 
-    bsSwitchContentGalleryCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
-    function bsSwitchContentGalleryCtrl($scope, $el, $attrs, $q) {
+    cmSwitchContentGalleryCtrl.$inject = '$scope, $element, $attrs, $q'.split(', ');
+    function cmSwitchContentGalleryCtrl($scope, $el, $attrs, $q) {
         var el = $el[0],
             switchContentCtrl = this;
 
@@ -521,7 +521,7 @@
                 this.width += panel.outerWidth;
                 el.style.width = this.width + 'px';
 
-                this.switch.$scope.$broadcast('bsSwitch.panel.add', this.panels.length - 1);
+                this.switch.$scope.$broadcast('cmSwitch.panel.add', this.panels.length - 1);
             },
 
             removePanel: function(panel) {
@@ -529,7 +529,7 @@
 
                 if (index !== -1) {
                     this.panels.splice(index, 1);
-                    this.switch.$scope.$broadcast('bsSwitch.panel.remove', index, panel);
+                    this.switch.$scope.$broadcast('cmSwitch.panel.remove', index, panel);
                     this.width -= panel.outerWidth;
                     el.style.width = this.width + 'px';
                 }
@@ -619,7 +619,7 @@
                     return promise;
                 }
 
-                this.switch.$scope.$broadcast('bsSwitch.panel.switch', index);
+                this.switch.$scope.$broadcast('cmSwitch.panel.switch', index);
 
                 if (this.animate) {
                     this.animate.over();
@@ -662,8 +662,8 @@
         });
     }
 
-    bsSwitchPanelCtrl.$inject = '$scope, $element, $attrs'.split(', ');
-    function bsSwitchPanelCtrl($scope, $el, $attrs) {
+    cmSwitchPanelCtrl.$inject = '$scope, $element, $attrs'.split(', ');
+    function cmSwitchPanelCtrl($scope, $el, $attrs) {
         var el = $el[0],
             switchPanelCtrl = this;
 
@@ -729,8 +729,8 @@
         });
     }
 
-    bsSwitchNavCtrl.$inject = '$scope, $element, $attrs'.split(', ');
-    function bsSwitchNavCtrl($scope, $el, $attrs) {
+    cmSwitchNavCtrl.$inject = '$scope, $element, $attrs'.split(', ');
+    function cmSwitchNavCtrl($scope, $el, $attrs) {
         var el = $el[0],
             switchNavCtrl = this;
 
@@ -747,15 +747,15 @@
                 this.switch = switchCtrl;
                 $el.addClass(switchCtrl.config.classPrefix + '-nav');
 
-                switchCtrl.$scope.$on('bsSwitch.panel.add', function($event, index) {
+                switchCtrl.$scope.$on('cmSwitch.panel.add', function($event, index) {
                     self.addNode(index);
                 });
 
-                switchCtrl.$scope.$on('bsSwitch.panel.remove', function($event, index) {
+                switchCtrl.$scope.$on('cmSwitch.panel.remove', function($event, index) {
                     self.removeNode(index);
                 });
 
-                switchCtrl.$scope.$on('bsSwitch.panel.switch', function($event, index) {
+                switchCtrl.$scope.$on('cmSwitch.panel.switch', function($event, index) {
                     self.change(index);
                 });
             },
@@ -805,10 +805,10 @@
     }
 
 
-    function bsSwitch() {
+    function cmSwitch() {
         return {
             restrict: 'E',
-            controller: 'bsSwitchCtrl',
+            controller: 'cmSwitchCtrl',
             scope: {
                 classPrefix: '@?',
                 autoPlay: '=?',
@@ -858,17 +858,17 @@
         }
     }
 
-    bsSwitchContent.$inject = '$controller'.split(', ');
-    function bsSwitchContent($controller) {
+    cmSwitchContent.$inject = '$controller'.split(', ');
+    function cmSwitchContent($controller) {
         return {
             restrict: 'E',
-            require: ['^^bsSwitch'],
+            require: ['^^cmSwitch'],
             link: link
         };
 
         function link($scope, $el, $attrs, ctrls) {
             var switchCtrl = ctrls[0],
-                contentCtrlName = 'bsSwitchContent' + capitalize(switchCtrl.config.type) + 'Ctrl';
+                contentCtrlName = 'cmSwitchContent' + capitalize(switchCtrl.config.type) + 'Ctrl';
 
             var switchContentCtrl = $controller(contentCtrlName, {
                 $scope: $scope,
@@ -892,11 +892,11 @@
         }
     }
 
-    function bsSwitchPanel() {
+    function cmSwitchPanel() {
         return {
             restrict: 'E',
-            controller: 'bsSwitchPanelCtrl',
-            require: ['^^bsSwitch', 'bsSwitchPanel'],
+            controller: 'cmSwitchPanelCtrl',
+            require: ['^^cmSwitch', 'cmSwitchPanel'],
             scope: true,
             link: link
         };
@@ -929,11 +929,11 @@
         }
     }
 
-    function bsSwitchNav() {
+    function cmSwitchNav() {
         return {
             restrict: 'E',
-            controller: 'bsSwitchNavCtrl',
-            require: ['^^bsSwitch', 'bsSwitchNav'],
+            controller: 'cmSwitchNavCtrl',
+            require: ['^^cmSwitch', 'cmSwitchNav'],
             link: link
         };
 

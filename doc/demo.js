@@ -1,4 +1,4 @@
-angular.module('demo', ['bsSwitch'])
+angular.module('demo', ['cmSwitch'])
     .controller('main', function($scope, $timeout) {
 
         $timeout(function() {
