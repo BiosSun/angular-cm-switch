@@ -1,6 +1,6 @@
 {
   "name": "angular-cm-switch",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A switch widget for mobile, use angular.",
   "devDependencies": {}
 }
