@@ -11,17 +11,39 @@
         .directive('cmSwitch', cmSwitch)
         .directive('cmSwitchContent', cmSwitchContent)
         .directive('cmSwitchPanel', cmSwitchPanel)
-        .directive('cmSwitchNav', cmSwitchNav);
+        .directive('cmSwitchNav', cmSwitchNav)
 
+        .factory('cmSwitchDelegate', cmSwitchDelegate);
     var DIRECTIONS = {
         LEFT: -1,
         RIGHT: 1
     };
 
-    cmSwitchCtrl.$inject = '$scope, $element, $attrs'.split(', ');
-    function cmSwitchCtrl($scope, $el, $attrs) {
+    function cmSwitchDelegate() {
+        var _instances = {};
+        return {
+            add: function (id, instance) {
+                _instances[id] = instance;
+            },
+            remove: function (id) {
+                delete _instances[id];
+            },
+            get: function (id) {
+                return _instances[id];
+            }
+        };
+    }
+    cmSwitchCtrl.$inject = '$scope, $element, $attrs, cmSwitchDelegate'.split(', ');
+    function cmSwitchCtrl($scope, $el, $attrs, cmSwitchDelegate) {
         var el = $el[0],
             switchCtrl = this;
+        if ($scope.delegateHandle) {
+            var id = $scope.delegateHandle;
+            cmSwitchDelegate.add(id, switchCtrl);
+            $scope.$on('$destroy', function () {
+                cmSwitchDelegate.remove(id);
+            });
+        }
 
         angular.extend(switchCtrl, {
             $scope: $scope,
@@ -130,6 +152,9 @@
                 el.removeEventListener('touchend', switchCtrl.slipEndHandler);
                 el.removeEventListener('touchcancel', switchCtrl.slipEndHandler);
                 switchCtrl.switchContent.standstill();
+            },
+            toggle: function(index, direction) {
+                switchCtrl.switchContent.toggle(index, direction);
             }
         });
     }
@@ -174,7 +199,7 @@
             autoPlayTiming: undefined,
 
             // 是否可循环切换
-            carousel: false,
+            doesContinue: false,
 
             init: function(switchCtrl) {
                 var self = this;
@@ -190,7 +215,7 @@
                 this.autoPlayTiming = switchCtrl.$scope.autoPlay;
                 this.autoPlay();
 
-                this.carousel = switchCtrl.$scope.carousel;
+                this.doesContinue = switchCtrl.$scope.doesContinue;
             },
 
             refresh: function() {
@@ -212,7 +237,7 @@
                     this.switch.$scope.$broadcast('cmSwitch.panel.switch', this.currentPanelIndex);
                 }
                 else {
-                    panel.$el.addClass('hide');
+                    // panel.$el.addClass('hide');
                 }
             },
 
@@ -257,10 +282,10 @@
             move: function(length) {
                 var offset = this.panelOffset + length;
 
-                this.animate && this.animate.over();
-                this.autoPlayTimer && this.stopAutoPlay();
+                if (this.animate) this.animate.over();
+                if (this.autoPlayTimer) this.stopAutoPlay();
 
-                if (!this.carousel && ((offset > 0 && this.currentPanelIndex === 0)
+                if (!this.doesContinue && ((offset > 0 && this.currentPanelIndex === 0)
                     || (offset < 0 && this.currentPanelIndex === this.panels.length - 1))) {
                     return;
                 }
@@ -274,12 +299,12 @@
                     direction = this.moveDirection,
                     toggleIndex;
 
-                if (!this.carousel && ((direction === DIRECTIONS.RIGHT && index === 0)
+                if (!this.doesContinue && ((direction === DIRECTIONS.RIGHT && index === 0)
                     || (direction === DIRECTIONS.LEFT && index === this.panels.length - 1))) {
                     this.autoPlay();
                 }
                 else {
-                    if (Math.abs(this.panelOffset) < this.currentPanel.outerWidth / 4) {
+                    if (Math.abs(this.panelOffset) < this.currentPanel.outerWidth / 8) {
                         toggleIndex = this.currentPanelIndex;
                     }
                     else {
@@ -339,7 +364,7 @@
                     over: function() {
                         if (index !== self.currentPanelIndex) {
                             self.currentPanel.$el.removeClass('active');
-                            self.currentPanel.$el.addClass('hide');
+                            // self.currentPanel.$el.addClass('hide');
 
                             if (direction === DIRECTIONS.LEFT) {
                                 self.rightPanel = undefined;
@@ -353,6 +378,7 @@
                             self.currentPanel = self.panels[index];
                             self.currentPanel.$el.addClass('active');
                             self.currentPanelIndex = index;
+                            self.switch.$scope.onPanelToggle(index);
                         }
 
                         self.panelOffset = 0;
@@ -397,28 +423,28 @@
                 var rightPanel = this.rightPanel,
                     leftPanel = this.leftPanel;
 
-                this.moveDirection = offset >= this.panelOffset ? DIRECTIONS.RIGHT : DIRECTIONS.LEFT;
+                this.moveDirection = offset > 0 ? DIRECTIONS.RIGHT : DIRECTIONS.LEFT;
                 this.panelOffset = offset;
                 this._transform(this.currentPanel.el, offset);
 
                 // 当偏移值小于 0 时，为向左移动，并露出右面板
                 if (offset < 0) {
-                    leftPanel && this._clearLeftPanel();
+                    if (leftPanel) this._clearLeftPanel();
 
                     if (!rightPanel) {
                         rightPanel = this.rightPanel = this._getNextPanelByIndex(this.currentPanelIndex);
-                        rightPanel.$el.removeClass('hide');
+                        rightPanel.$el.removeClass('hide').addClass('active');
                     }
 
                     this._transform(rightPanel.el, this.panelOffset + this.width);
                 }
                 // 当偏移值大于 0 时，为向右移动，并露出左面板
                 else if (offset > 0) {
-                    rightPanel && this._clearRightPanel();
+                    if (rightPanel) this._clearRightPanel();
 
                     if (!leftPanel) {
                         leftPanel = this.leftPanel = this._getPrevPanelByIndex(this.currentPanelIndex);
-                        leftPanel.$el.removeClass('hide');
+                        leftPanel.$el.removeClass('hide').addClass('active');
                     }
 
                     this._transform(leftPanel.el, this.panelOffset - this.width);
@@ -455,14 +481,16 @@
 
             _clearLeftPanel: function() {
                 if (this.leftPanel) {
-                    this.leftPanel.$el.addClass('hide');
+                    // this.leftPanel.$el.addClass('hide');
+                    this.leftPanel.$el.removeClass('active');
                     this.leftPanel = undefined;
                 }
             },
 
             _clearRightPanel: function() {
                 if (this.rightPanel) {
-                    this.rightPanel.$el.addClass('hide');
+                    // this.rightPanel.$el.addClass('hide');
+                    this.rightPanel.$el.removeClass('active');
                     this.rightPanel = undefined;
                 }
             },
@@ -709,9 +737,9 @@
                     el.style.display = 'block';
                 }
 
-                marginRight = parseInt(elStyles.marginRight, 10),
-                marginLeft = parseInt(elStyles.marginLeft, 10),
-                offsetWidth = el.offsetWidth,
+                marginRight = parseInt(elStyles.marginRight, 10);
+                marginLeft = parseInt(elStyles.marginLeft, 10);
+                offsetWidth = el.offsetWidth;
 
                 outerWidth = marginRight + marginLeft + offsetWidth;
 
@@ -813,7 +841,9 @@
                 classPrefix: '@?',
                 autoPlay: '=?',
                 type: '@?',
-                carousel: '@?'
+                doesContinue: '@?',
+                onPanelToggle: '=?',
+                delegateHandle: '@?'
             },
             link: link
         };
@@ -833,9 +863,12 @@
                 $scope.classPrefix = 'ui-switch';
             }
 
-            $scope.carousel = $scope.carousel === 'false' ? false :
-                              $scope.carousel === 'true' ? true :
-                              ($scope.carousel || true);
+            $scope.doesContinue = $scope.doesContinue === 'false' ? false :
+                              $scope.doesContinue === 'true' ? true :
+                              ($scope.doesContinue || true);
+            if (!$scope.onPanelToggle) {
+                $scope.onPanelToggle = function(){};
+            }
 
             switchCtrl.init();
 
@@ -851,7 +884,7 @@
                         switchCtrl.refresh();
                     }
                 }
-                catch (e) {
+                catch (exception) {
                     switchCtrl.refresh();
                 }
             }
