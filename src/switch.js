@@ -832,8 +832,8 @@
         });
     }
 
-
-    function cmSwitch() {
+    cmSwitch.$inject = '$rootScope'.split(', ');
+    function cmSwitch($rootScope) {
         return {
             restrict: 'E',
             controller: 'cmSwitchCtrl',
@@ -873,18 +873,18 @@
             switchCtrl.init();
 
             window.addEventListener('resize', refresh);
+            var h = $rootScope.$on('$ionicView.enter', refresh);
 
             $scope.$on('$destroy', function() {
                 window.removeEventListener('resize', refresh);
+                h();
             });
 
             function refresh(e) {
-                try {
-                    if (!(e instanceof CustomEvent)) {
-                        switchCtrl.refresh();
-                    }
+                if ($el.is(':hidden')) {
+                    return;
                 }
-                catch (exception) {
+                else {
                     switchCtrl.refresh();
                 }
             }
