@@ -259,6 +259,11 @@
                 if (index === this.currentPanelIndex) {
                     if (this.panels.length) {
                         var newCurrentPanel = this.panels[index];
+                        if(!newCurrentPanel){
+                            var lastIndex = this.panels.length - 1;
+                            newCurrentPanel = this.panels[lastIndex];
+                            this.currentPanelIndex = lastIndex;
+                        }
 
                         this._transform(newCurrentPanel.el, 0);
                         newCurrentPanel.$el.removeClass('hide');
