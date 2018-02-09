@@ -19,6 +19,44 @@
         RIGHT: 1
     };
 
+    var EVENTTYPE =
+		  "ontouchstart" in window
+		    ? {
+		        START: "touchstart",
+		        MOVE: "touchmove",
+		        END: "touchend",
+		        CANCEL: "touchcancel"
+		      }
+		    : {
+		        START: "mousedown",
+		        MOVE: "mousemove",
+		        END: "mouseup",
+		        CANCEL: "mouseleave"
+		      };
+
+    function eventService(param) {
+
+	    var result = {
+	        pageX: null,
+	        pageY: null,
+	        length: null
+	    };
+	    if (param.pageX >= 0) {
+	        result.pageX = param.pageX;
+	        result.pageY = param.pageY;
+	        result.length = 0;
+	    }
+	    else {
+	        var touches = param.touches;
+	        result.pageX = touches[0].pageX;
+	        result.pageY = touches[0].pageY;
+	        result.length = touches.length;
+	    }
+	    return angular.extend(param, {
+	        result: result
+	    });
+	}
+
     function cmSwitchDelegate() {
         var _instances = {};
         return {
@@ -85,25 +123,27 @@
             // 绑定触摸事件
             bindTouchEvent: function() {
                 var self = this,
-                    oX, oY, count;
+                    oX, oY, count, event;
 
-                el.addEventListener('touchstart', function(e) {
+                el.addEventListener(EVENTTYPE.START, function(e) {
                     if (self.content.panels.length > 1) {
-                        oX = e.touches[0].pageX;
-                        oY = e.touches[0].pageY;
+                    	event = eventService(e);
+                        oX = event.result.pageX;
+                        oY = event.result.pageY;
 
                         count = 0;
 
+                        e.stopPropagation();
                         // 判断是否为横向移动
-                        el.addEventListener('touchmove', hslip);
+                        el.addEventListener(EVENTTYPE.MOVE, hslip);
                     }
                 });
 
 
                 // 水平滑动操作
                 function hslip(e) {
-                    var x = e.touches[0].pageX,
-                        y = e.touches[0].pageY,
+                    var x = event.result.pageX,
+                        y = event.result.pageY,
 
                         // 以上一次触摸事件的触发点为原点，计算当前触摸事件的触发点的角度
                         w = x - oX,
@@ -120,11 +160,11 @@
                         if (count === 3) {
                             switchCtrl.oX = x;
 
-                            el.addEventListener('touchmove', switchCtrl.slipHandler);
-                            el.addEventListener('touchend', switchCtrl.slipEndHandler);
-                            el.addEventListener('touchcancel', switchCtrl.slipEndHandler);
+                            el.addEventListener(EVENTTYPE.MOVE, switchCtrl.slipHandler);
+                            el.addEventListener(EVENTTYPE.END, switchCtrl.slipEndHandler);
+                            el.addEventListener(EVENTTYPE.CANCEL, switchCtrl.slipEndHandler);
 
-                            el.removeEventListener('touchmove', hslip);
+                            el.removeEventListener(EVENTTYPE.MOVE, hslip);
                         }
 
                         e.preventDefault();
@@ -132,13 +172,13 @@
                     }
                     // 否则过滤掉该事件
                     else {
-                        el.removeEventListener('touchmove', hslip);
+                        el.removeEventListener(EVENTTYPE.MOVE, hslip);
                     }
                 }
             },
 
             slipHandler: function (e) {
-                var x = e.touches[0].pageX,
+                var x = eventService(e).result.pageX,
                     h = x - switchCtrl.oX;
                 switchCtrl.oX = x;
                 switchCtrl.switchContent.move(h);
@@ -148,9 +188,9 @@
             },
 
             slipEndHandler: function (e) {
-                el.removeEventListener('touchmove', switchCtrl.slipHandler);
-                el.removeEventListener('touchend', switchCtrl.slipEndHandler);
-                el.removeEventListener('touchcancel', switchCtrl.slipEndHandler);
+                el.removeEventListener(EVENTTYPE.MOVE, switchCtrl.slipHandler);
+                el.removeEventListener(EVENTTYPE.END, switchCtrl.slipEndHandler);
+                el.removeEventListener(EVENTTYPE.CANCEL, switchCtrl.slipEndHandler);
                 switchCtrl.switchContent.standstill();
             },
             toggle: function(index, direction) {
